@@ -48,7 +48,7 @@ void write_char(char str, int row, int col) {
 void write(char* str_ptr) {
     int position = 0;
     while (*str_ptr != '\0') {
-        write_char(*str_ptr, position, 0);
+        write_char(*str_ptr, 0, position);
         str_ptr++;
         position++;
     }

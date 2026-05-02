@@ -36,7 +36,7 @@ build: link setup
 	cp grub.cfg isodir/boot/grub/grub.cfg
 	grub-mkrescue -o $(ISO) isodir
 
-run: $(ISO)
+run: build
 	qemu-system-i386 -cdrom $(ISO)
 
 clean:
