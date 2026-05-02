@@ -13,7 +13,7 @@
 #endif
 
 /* Hardware text mode color constants. */
-enum vga_color {
+typedef enum vga_color {
 	VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
 	VGA_COLOR_GREEN = 2,
@@ -30,25 +30,25 @@ enum vga_color {
 	VGA_COLOR_LIGHT_MAGENTA = 13,
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
-};
+} VgaColor;
 #define VGA_WIDTH   80
 #define VGA_HEIGHT  25
 #define VGA_MEMORY  (volatile uint16_t*) 0xB8000
 
-uint16_t set_color(char str) {
-    uint8_t colour = VGA_COLOR_BLACK << 4 | VGA_COLOR_BLUE;
+uint16_t set_color(char str, VgaColor fg, VgaColor bg) {
+    uint8_t colour = bg << 4 | fg;
     return colour << 8 | (uint8_t)str;
 }
 
-void write_char(char str, int row, int col) {
+void write_char(char str, int row, int col, VgaColor fg, VgaColor bg) {
     int index = row * VGA_WIDTH + col;
-    *(VGA_MEMORY+index) = set_color(str);
+    *(VGA_MEMORY+index) = set_color(str, fg, bg);
 }
 
 void write(char* str_ptr) {
     int position = 0;
     while (*str_ptr != '\0') {
-        write_char(*str_ptr, 0, position);
+        write_char(*str_ptr, 0, position, VGA_COLOR_BLUE, VGA_COLOR_BLACK);
         str_ptr++;
         position++;
     }
