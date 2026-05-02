@@ -31,6 +31,7 @@ typedef enum vga_color {
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
 } VgaColor;
+
 #define VGA_WIDTH   80
 #define VGA_HEIGHT  25
 #define VGA_MEMORY  (volatile uint16_t*) 0xB8000
@@ -41,19 +42,27 @@ uint16_t set_color(char str, VgaColor fg, VgaColor bg) {
 }
 
 void write_char(char str, int row, int col, VgaColor fg, VgaColor bg) {
+    if (str == '\n') {
+
+    }
     int index = row * VGA_WIDTH + col;
     *(VGA_MEMORY+index) = set_color(str, fg, bg);
 }
 
 void write(char* str_ptr) {
-    int position = 0;
-    while (*str_ptr != '\0') {
-        write_char(*str_ptr, 0, position, VGA_COLOR_BLUE, VGA_COLOR_BLACK);
-        str_ptr++;
-        position++;
+    int col = 0;
+    int row = 0;
+    for (;*str_ptr != '\0';str_ptr++) {
+        if (*str_ptr == '\n') {
+            col = 0;
+            row += 1;
+            continue;
+        }
+        write_char(*str_ptr, row, col, VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+        col++;
     }
 }
 
 void kernel_main() {
-    write("Hello World");
+    write("Hello World\nHi\nWhat is up bros");
 }
