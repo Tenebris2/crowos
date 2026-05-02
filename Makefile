@@ -2,6 +2,12 @@ SHELL := /usr/bin/fish
 # Define the kernel name
 KERNEL = crowos
 ISO = crowos.iso
+# Define variables if not already set
+BINARY_DIR ?= build
+
+# A 'setup' target to ensure the directory exists
+setup:
+	mkdir -p $(BINARY_DIR)
 
 $(ISO): $(KERNEL) grub.cfg
 	@if grub-file --is-x86-multiboot $(KERNEL); then \
@@ -12,20 +18,21 @@ $(ISO): $(KERNEL) grub.cfg
 	fi
 	# Proceed with ISO creation commands here
 	mkdir -p isodir/boot/grub
-	cp $(KERNEL) isodir/boot/$(KERNEL)
+	cp $(BINARY_DIR)/$(KERNEL) isodir/boot/$(KERNEL)
 	cp grub.cfg isodir/boot/grub/grub.cfg
 	grub-mkrescue -o $(ISO) isodir
 
-build-boot:
-	cross-as boot.s -o boot.o
-build-code:
-	cross -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-link: build-code build-boot
-	cross -T linker.ld -o $(KERNEL) -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
 
-build: link
+build-boot: setup
+	cross-as boot.s -o $(BINARY_DIR)/boot.o
+build-code: setup
+	cross -c kernel.c -o $(BINARY_DIR)/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+link: build-code build-boot setup
+	cross -T linker.ld -o $(BINARY_DIR)/$(KERNEL) -ffreestanding -O2 -nostdlib $(BINARY_DIR)/boot.o $(BINARY_DIR)/kernel.o -lgcc
+
+build: link setup
 	mkdir -p isodir/boot/grub
-	cp $(KERNEL) isodir/boot/crowos
+	cp $(BINARY_DIR)/$(KERNEL) isodir/boot/crowos
 	cp grub.cfg isodir/boot/grub/grub.cfg
 	grub-mkrescue -o $(ISO) isodir
 
@@ -33,6 +40,6 @@ run: $(ISO)
 	qemu-system-i386 -cdrom $(ISO)
 
 clean:
-	rm boot.o kernel.o $(KERNEL)
+	rm -rf $(BINARY_DIR)
 	rm -rf isodir
 	rm $(ISO)
