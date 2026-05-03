@@ -6,33 +6,42 @@
 
 volatile uint64_t *BASE_ADDRESS = (volatile uint64_t *)0x00000000;
 
-void set_kernel_segment_descriptor(int index,
-                                   segment_descriptor *sd,
-                                   uint8_t read_write,
-                                   uint8_t dir_conf,
-                                   uint8_t executable,
-                                   uint8_t s_type,
-                                   uint8_t priv_level,
-                                   uint8_t flags) {
-  sd[index].limit_low = 0xFFFF;
-  sd[index].base_low = 0x0000;
-  sd[index].base_middle = 0x00;
-  sd[index].limit_high = 0xF;
-  sd[index].flags = flags;
-  sd[index].base_high = 0x00;
+segment_descriptor gdt[3];
 
-  sd[index].access.accessed = 1; // sets to 1 if the segment is in memory, else trigger "segment not present"
-  sd[index].access.read_write = read_write; //
-  sd[index].access.dir_conf = dir_conf;
-  sd[index].access.executable = executable;
-  sd[index].access.s_type = s_type; // 1 if it a system segment(tss or ldt), 0 if it is a code or data segment
-  sd[index].access.dpl = priv_level; //descriptor privilege level, 0, 1, 2, 3; 0: kernel level, 1-2: driver, 3: userspace
-  sd[index].access.present = 1;
+segment_descriptor get_flat_descriptor() {
+  segment_descriptor sd;
+  sd.base_low = (GDT_BASE & 0xFFFF);
+  sd.base_middle = (GDT_BASE >> 16) & 0xFF;
+  sd.base_high = (GDT_BASE >> 24) & 0xFF;
+
+  sd.limit_low = (GDT_LIMIT & 0xFFFF);
+  return sd;
 }
 
-void init_kernel_segment(void) {
-  segment_descriptor sd[3];
-  *((uint64_t *)&sd[0]) = UINT64_C(0);
-  set_kernel_segment_descriptor(1, sd, 1, 0, 1, 1, 0, 0xC);
-  set_kernel_segment_descriptor(2, sd, 1, 0, 0, 1, 0, 0xC);
+void init_kernel_code_segment(int index) {
+  gdt[index] = get_flat_descriptor();
+  gdt[index].flags = GDT_FLAG_GRANULARITY | GDT_FLAG_SIZE_32;
+  gdt[index].access = GDT_ACCESS_PRESENT | GDT_ACCESS_RING0 |
+                      GDT_ACCESS_CODE_DATA | GDT_ACCESS_EXECUTABLE |
+                      GDT_ACCESS_RW;
+}
+void init_kernel_data_segment(int index) {
+  gdt[index] = get_flat_descriptor();
+
+  // Flags remain the same: 4KB Granularity + 32-bit mode
+  gdt[index].flags = GDT_FLAG_GRANULARITY | GDT_FLAG_SIZE_32;
+
+  // Access: Note the absence of EXECUTABLE
+  gdt[index].access = GDT_ACCESS_PRESENT | GDT_ACCESS_RING0 |
+                      GDT_ACCESS_CODE_DATA |
+                      GDT_ACCESS_RW; // For Data, RW means Writable
+}
+
+// Usage is now much more readable
+void init_gdt() {
+  // Null segment
+  *((uint64_t *)&gdt[0]) = 0; // set null descriptor
+  // Kernel Code: Present | Ring0 | Code/Data | Executable | Readable
+  init_kernel_code_segment(1);
+  init_kernel_data_segment(2)
 }

@@ -5,6 +5,6 @@
 
 void kernel_main(void) {
   terminal_initialize();
-  init_kernel_segment();
+  init_gdt();
   printf("Hello, kernel World!\n");
 }
