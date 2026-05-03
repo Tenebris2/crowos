@@ -6,7 +6,7 @@
 
 volatile uint64_t *BASE_ADDRESS = (volatile uint64_t *)0x00000000;
 
-segment_descriptor gdt[3];
+segment_descriptor gdt[3] __attribute__((section(".gdt_mem")));
 
 segment_descriptor get_flat_descriptor() {
   segment_descriptor sd;
