@@ -20,6 +20,9 @@
 
 #define GDT_BASE 0x00000000U
 #define GDT_LIMIT 0xFFFFFFFFU
+#define GDT_STARTING_ADDRESS 0x00000800
+#define GDT_SIZE 24
+
 typedef enum {
     KERNEL = 0,
     DRIVER_1 = 1,
@@ -36,6 +39,11 @@ typedef struct {
     uint8_t  flags      : 4;  // Flags (Granularity, Size, etc.)
     uint8_t  base_high;       // Last 8 bits of the base
 } segment_descriptor __attribute__((packed));    // Prevents the compiler from adding padding
+
+typedef struct {
+    uint16_t size;
+    uint32_t offset;
+} gdtr __attribute__((packed));
 
 // struct gdtr {
 //     uint64_t base_address;
