@@ -43,5 +43,5 @@ void init_gdt() {
   *((uint64_t *)&gdt[0]) = 0; // set null descriptor
   // Kernel Code: Present | Ring0 | Code/Data | Executable | Readable
   init_kernel_code_segment(1);
-  init_kernel_data_segment(2)
+  init_kernel_data_segment(2);
 }
