@@ -1,4 +1,8 @@
 *.o
 build/
 isodir/
+.cache/
 *.iso
+compile_commands.json
+*.a
+sysroot/

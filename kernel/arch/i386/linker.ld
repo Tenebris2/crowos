@@ -6,6 +6,13 @@ ENTRY(_start)
    kernel image. */
 SECTIONS
 {
+    /*
+        Setup the Global Descriptor Table to be at address of 0x00000800
+    */
+    . =0x800;
+    .gdt_mem : {
+        *(.gdt_mem)
+    }
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
 	. = 1M;

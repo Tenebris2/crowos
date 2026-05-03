@@ -23,17 +23,18 @@ stack_top:
 .section .text
 .global _start
 .type _start, @function
+
 _start:
 	movl $stack_top, %esp
-
+	# Hang if kernel_main unexpectedly returns.
+	cli
 	# Call the global constructors.
 	call _init
 
 	# Transfer control to the main kernel.
 	call kernel_main
+#     # Now the CPU is fully using the GDT at 0x800
 
-	# Hang if kernel_main unexpectedly returns.
-	cli
 1:	hlt
 	jmp 1b
 .size _start, . - _start
