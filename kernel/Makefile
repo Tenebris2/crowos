@@ -19,6 +19,7 @@ LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc
 
 ARCHDIR=arch/$(HOSTARCH)
+BUILDDIR=build
 
 include $(ARCHDIR)/make.config
 
@@ -28,47 +29,51 @@ LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
-$(KERNEL_ARCH_OBJS) \
-kernel/kernel.o \
+$(KERNEL_ARCH_OBJS:%.o=$(BUILDDIR)/%.o) \
+$(BUILDDIR)/kernel/kernel.o \
 
 OBJS=\
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(BUILDDIR)/$(ARCHDIR)/crti.o \
+$(BUILDDIR)/$(ARCHDIR)/crtbegin.o \
 $(KERNEL_OBJS) \
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
+$(BUILDDIR)/$(ARCHDIR)/crtend.o \
+$(BUILDDIR)/$(ARCHDIR)/crtn.o \
 
 LINK_LIST=\
 $(LDFLAGS) \
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(BUILDDIR)/$(ARCHDIR)/crti.o \
+$(BUILDDIR)/$(ARCHDIR)/crtbegin.o \
 $(KERNEL_OBJS) \
 $(LIBS) \
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
+$(BUILDDIR)/$(ARCHDIR)/crtend.o \
+$(BUILDDIR)/$(ARCHDIR)/crtn.o \
 
 .PHONY: all clean install install-headers install-kernel
 .SUFFIXES: .o .c .S
 
+$(BUILDDIR) $(BUILDDIR)/$(ARCHDIR):
+	mkdir -p $@
+
 all: crowos.kernel
 
-crowos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
+crowos.kernel: $(OBJS) $(ARCHDIR)/linker.ld | $(BUILDDIR)
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
 	grub-file --is-x86-multiboot crowos.kernel
 
-$(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
+$(BUILDDIR)/$(ARCHDIR)/crtbegin.o $(BUILDDIR)/$(ARCHDIR)/crtend.o: | $(BUILDDIR)/$(ARCHDIR)
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
-.c.o:
+$(BUILDDIR)/%.o: %.c | $(BUILDDIR)
+	@mkdir -p $(@D)
 	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
-.S.o:
+$(BUILDDIR)/%.o: %.S | $(BUILDDIR)
+	@mkdir -p $(@D)
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
 	rm -f crowos.kernel
-	rm -f $(OBJS) *.o */*.o */*/*.o
-	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+	rm -rf $(BUILDDIR)
 
 install: install-headers install-kernel
 
@@ -80,4 +85,4 @@ install-kernel: crowos.kernel
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp crowos.kernel $(DESTDIR)$(BOOTDIR)
 
--include $(OBJS:.o=.d)
+-include $(shell find $(BUILDDIR) -name '*.d' 2>/dev/null)
