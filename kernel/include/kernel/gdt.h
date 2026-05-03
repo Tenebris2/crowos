@@ -38,12 +38,12 @@ typedef struct {
     uint8_t  limit_high : 4;  // Last 4 bits of the limit
     uint8_t  flags      : 4;  // Flags (Granularity, Size, etc.)
     uint8_t  base_high;       // Last 8 bits of the base
-} segment_descriptor __attribute__((packed));    // Prevents the compiler from adding padding
+} __attribute__((packed)) segment_descriptor;    // Prevents the compiler from adding padding
 
 typedef struct {
     uint16_t size;
     uint32_t offset;
-} gdtr __attribute__((packed));
+} __attribute__((packed)) gdtr ;
 
 // struct gdtr {
 //     uint64_t base_address;

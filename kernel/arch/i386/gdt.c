@@ -41,8 +41,8 @@ void init_kernel_data_segment(int index) {
 }
 
 void init_gdtr() {
-  gdt_register.size = sizeof(gdt) - 1;
-  gdt_register.offset = 0x800;
+  gdt_register.size = (uint16_t) sizeof(gdt) - 1;
+  gdt_register.offset = (uint32_t) 0x800;
 }
 
 void load_gdt() {
@@ -50,16 +50,16 @@ void load_gdt() {
     asm volatile("lgdt %0" : : "m"(gdt_register));
 
     // // 2. Reload the segment registers (The part you have)
-    // asm volatile(
-    //     "movw $0x10, %ax \n"    // 0x10 is Index 2 (Data)
-    //     "movw %ax, %ds   \n"
-    //     "movw %ax, %es   \n"
-    //     "movw %ax, %fs   \n"
-    //     "movw %ax, %gs   \n"
-    //     "movw %ax, %ss   \n"    // Don't forget the Stack Segment!
-    //     "ljmp $0x08, $1f \n" // 0x08 is Index 1 (Code)
-    //     "1:          \n"
-    // );
+    asm volatile(
+        "movw $0x10, %ax \n"    // 0x10 is Index 2 (Data)
+        "movw %ax, %ds   \n"
+        "movw %ax, %es   \n"
+        "movw %ax, %fs   \n"
+        "movw %ax, %gs   \n"
+        "movw %ax, %ss   \n"    // Don't forget the Stack Segment!
+        "ljmp $0x08, $1f \n" // 0x08 is Index 1 (Code)
+        "1:          \n"
+    );
 }
 // Usage is now much more readable
 void init_gdt() {
@@ -69,6 +69,6 @@ void init_gdt() {
   init_kernel_code_segment(1);
   init_kernel_data_segment(2);
 
-  // init_gdtr();
-  // load_gdt();
+  init_gdtr();
+  load_gdt();
 }
