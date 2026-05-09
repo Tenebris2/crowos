@@ -6,8 +6,6 @@
 #include <kernel/gdt.h>
 #include <kernel/tty.h>
 
-volatile uint64_t *BASE_ADDRESS = (volatile uint64_t *)0x00000000;
-
 segment_descriptor gdt[3] __attribute__((section(".gdt_mem")));
 gdtr gdt_register;
 

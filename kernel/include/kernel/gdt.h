@@ -28,7 +28,7 @@ typedef enum {
     DRIVER_1 = 1,
     DRIVER_2 = 2,
     USER_SPACE = 3,
-} Privilege;
+} __attribute__((packed)) Privilege;
 
 typedef struct {
     uint16_t limit_low;       // Lower 16 bits of the limit

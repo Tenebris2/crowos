@@ -1,7 +1,9 @@
 add_executable(crowos.kernel
     kernel/kernel.c
+    arch/i386/interrupt_handler.c
     arch/i386/tty.c
     arch/i386/gdt.c
+    arch/i386/idt.c
     arch/i386/boot.S
     arch/i386/crti.S
     arch/i386/crtn.S
