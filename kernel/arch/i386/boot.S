@@ -25,13 +25,18 @@ stack_top:
 .altmacro
 .macro idt_stub index
     .global idt_stub_\index
-    .type init_stub_\index, @function
+    .type idt_stub_\index, @function
     idt_stub_\index:
         pushl $0
         pushl $\index
         jmp common_stub
-        iret
 .endm
+
+.set i, 0
+.rept 32
+    idt_stub %i
+    .set i, i + 1
+.endr
 
 .global common_stub
 .type common_stub, @function
@@ -39,28 +44,23 @@ stack_top:
 common_stub:
     .extern exception_handler
     # 1. Save general purpose registers
-    # If in 32-bit mode, pusha saves EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
     pusha
 
     # 2. Save Segment Registers
-    # (DS is usually enough, but saving ES, FS, and GS is safer)
     pushw %ds
     pushw %es
     pushw %fs
     pushw %gs
 
     # 3. Load Kernel Data Segment
-    # This ensures the kernel can actually access its own global variables
     movl $0x10, %eax
     movw %ax, %ds
     movw %ax, %es
     movw %ax, %fs
     movw %ax, %gs
 
-    # 4. Pass the stack pointer to C
-    # The current ESP points to the start of our "struct" on the stack
+    # 4. Call exception handler with exception number and error code on stack
     call exception_handler
-    addl $4, %esp
 
     # 5. Restore State
     popw %gs
@@ -95,9 +95,12 @@ _start:
 .section .data
 
 .global isr_stub_table
-.set i, 0
 isr_stub_table:
-    .rept 32
-        idt_stub %i
-        .set i, i + 1
-    .endr
+    .long idt_stub_0, idt_stub_1, idt_stub_2, idt_stub_3
+    .long idt_stub_4, idt_stub_5, idt_stub_6, idt_stub_7
+    .long idt_stub_8, idt_stub_9, idt_stub_10, idt_stub_11
+    .long idt_stub_12, idt_stub_13, idt_stub_14, idt_stub_15
+    .long idt_stub_16, idt_stub_17, idt_stub_18, idt_stub_19
+    .long idt_stub_20, idt_stub_21, idt_stub_22, idt_stub_23
+    .long idt_stub_24, idt_stub_25, idt_stub_26, idt_stub_27
+    .long idt_stub_28, idt_stub_29, idt_stub_30, idt_stub_31

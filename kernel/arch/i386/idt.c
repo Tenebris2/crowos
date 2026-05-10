@@ -7,11 +7,8 @@
 #include <kernel/tty.h>
 #include <kernel/idt.h>
 
-#define INTERRUPT_GATE 0xE0
-#define TRAP_GATE 0xF0
-#define VALID_HANDLER 0x01
-#define DECLARE_ISR_STUB(x) extern void idt_stub_##x()
-#define GET_STUB_ADDRESS(x) (uint32_t)idt_stub_##x
+#define INTERRUPT_GATE 0x8E
+#define TRAP_GATE 0x8F
 
 static isr_t idt[256];
 static idtr_t idt_register;
@@ -19,7 +16,8 @@ extern void* isr_stub_table[];
 
 void init_isr(int i) {
     uint32_t isr_address = (uint32_t)isr_stub_table[i];
-    idt[i].attributes = INTERRUPT_GATE | VALID_HANDLER | (KERNEL << 1);
+    idt[i].attributes = INTERRUPT_GATE;
+    idt[i].reserved = 0;
     idt[i].selector = 0x8;
     idt[i].offset_low = isr_address & 0xFFFF;
     idt[i].offset_high = (isr_address >> 16) & 0xFFFF;

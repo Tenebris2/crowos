@@ -8,6 +8,7 @@ typedef struct {
   uint16_t selector;   // the gdt segment selector(which selector to start
                        // executing in(the offset), for example: in our gdt then
                        // it would be 0x8 for the code segment)
+  uint8_t reserved;
   uint8_t
       attributes; // MAGIC_NUMBER; [present_bit dpl reserved type(two types of
   // interrupts: interrupt_gate(1110)(cpu can't do anything
@@ -25,7 +26,7 @@ typedef struct {
 typedef struct {
     uint16_t size; // also actual_size - 1
     uint32_t offset;
-} __attribute((packed)) idtr_t;
+} __attribute__((packed)) idtr_t;
 
 void init_idt(void);
 #endif
