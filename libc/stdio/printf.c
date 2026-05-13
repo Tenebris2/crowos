@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+char* itoa(int num);
+
 static bool print(const char* data, size_t length) {
 	const unsigned char* bytes = (const unsigned char*) data;
 	for (size_t i = 0; i < length; i++)
@@ -61,6 +63,18 @@ int printf(const char* restrict format, ...) {
 			if (!print(str, len))
 				return -1;
 			written += len;
+		} else if (*format == 'd') {
+			format++;
+			int num = va_arg(parameters, int);
+			const char* str = itoa(num);
+			size_t len = strlen(str);
+			if (maxrem < len) {
+				// TODO: Set errno to EOVERFLOW.
+				return -1;
+			}
+			if (!print(str, len))
+				return -1;
+			written += len;
 		} else {
 			format = format_begun_at;
 			size_t len = strlen(format);
@@ -77,4 +91,37 @@ int printf(const char* restrict format, ...) {
 
 	va_end(parameters);
 	return written;
+}
+char* itoa(int num) {
+	static char buffer[20];
+
+	if (num == 0) {
+		buffer[0] = '0';
+		buffer[1] = '\0';
+		return buffer;
+	}
+
+	int copy = num;
+	int count = 0;
+	while (copy != 0) {
+		copy /= 10;
+		count++;
+	}
+
+	int index = 0;
+	while (num != 0) {
+		buffer[index] = '0' + num % 10;
+		num /= 10;
+		index++;
+	}
+
+	// Reverse
+	for (int i = 0, j = count - 1; i < j; i++, j--) {
+		char tmp = buffer[i];
+		buffer[i] = buffer[j];
+		buffer[j] = tmp;
+	}
+
+	buffer[count] = '\0';
+	return buffer;
 }

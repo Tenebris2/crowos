@@ -59,8 +59,12 @@ common_stub:
     movw %ax, %fs
     movw %ax, %gs
 
-    # 4. Call exception handler with exception number and error code on stack
+    # 4. Call exception handler - push args explicitly (cdecl, right-to-left)
+    # Stack at this point: gs,fs,es,ds (8B) + pusha (32B) = 40B above exception_num
+    pushl 44(%esp)   # error_code (at esp+44; was esp+40 before first push shifts it)
+    pushl 44(%esp)   # exception_num (now at esp+44 after above push)
     call exception_handler
+    addl $8, %esp    # caller cleanup
 
     # 5. Restore State
     popw %gs
